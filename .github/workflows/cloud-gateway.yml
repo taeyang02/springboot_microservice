@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Run Common Job
-      uses: ./.github/workflows/common_job.yml
-    
     - name: Checkout code
       uses: actions/checkout@v2
+    
+    - name: Run Common Job
+      uses: ./.github/workflows/common_job.yml
     
     - name: Set up JDK
       uses: actions/setup-java@v2
