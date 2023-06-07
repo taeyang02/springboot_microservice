@@ -1,4 +1,4 @@
 jobs:
    steps:
-    - name: Checkout code
+    - name: TestXX
       run: echo "hello"
