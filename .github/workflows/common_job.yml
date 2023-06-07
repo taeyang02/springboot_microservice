@@ -1,4 +1,11 @@
+name: Common Job
+
+on: []
+
 jobs:
-   steps:
-    - name: TestXX
-      run: echo "hello"
+  common_job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print Hello World
+        run: echo "Hello, World!"
