@@ -23,7 +23,7 @@ jobs:
       uses: actions/checkout@v2
       
     - name: Run Common Job
-      uses: ./.github/workflows/branch-main/common_job.yml
+      uses: ./.github/workflows/common_job.yml
     
     - name: Set up JDK
       uses: actions/setup-java@v2
