@@ -1,0 +1,4 @@
+jobs:
+  cloud_gateway_job:
+    runs-on: ubuntu-latest
+    needs: service_registry_job
