@@ -18,9 +18,9 @@ jobs:
   Test:
     uses: ./.github/workflows/common_job.yml
     with:
-      JAR_FILE_NAME: ${{ env.JAR_FILE_NAME }}
-      TARGET_PATH: ${{ env.TARGET_PATH }}
+      JAR_FILE_NAME: 'service_registry-0.0.1-SNAPSHOT.jar'
+      TARGET_PATH: 'service_registry'
     secrets:
-      EC2_HOST: ${{ env.EC2_HOST }}
-      EC2_USERNAME: ${{ env.EC2_USERNAME }}
-      EC2_PRIVATE_KEY: ${{ env.EC2_PRIVATE_KEY }}
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
