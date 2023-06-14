@@ -1,14 +1,59 @@
 name: Common Job
 
-on: []
+on:
+  workflow_call:
+    inputs:
+      JAR_FILE_NAME:
+        required: true
+        type: string
+      TARGET_PATH:
+        required: true
+        type: string
+    secrets:
+      EC2_HOST:
+        required: true
+      EC2_USERNAME:
+        required: true
+      EC2_PRIVATE_KEY:
+        required: true
 
 jobs:
-  common_job:
+  deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      - name: Print Hello World
-        run: echo "Hello, World!"
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+    
+    - name: Build JAR
+      run: cd ${{ inputs.TARGET_PATH }} && mvn package -DskipTests
+    
+    - name: Copy JAR to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        source: '${{ inputs.TARGET_PATH }}/target/${{ inputs.JAR_FILE_NAME }}'
+        target: '${{ inputs.TARGET_PATH }}'
+        
+    - name: Deploying ... 
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        script: |
+          {
+            if tmux ls | awk -F: '{print $1}' | grep -wq "deployment-${{ inputs.JAR_FILE_NAME }}"; then
+              tmux kill-session -t deployment-${{ inputs.JAR_FILE_NAME }}
+            fi
+          }
+          cd ${{ inputs.TARGET_PATH }}/${{ inputs.TARGET_PATH }}/target
+          tmux new-session -d -s deployment-${{ inputs.JAR_FILE_NAME }} 'java -jar ${{ inputs.JAR_FILE_NAME }}'
