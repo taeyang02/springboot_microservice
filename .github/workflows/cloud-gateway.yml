@@ -24,7 +24,7 @@ jobs:
       EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}'
     
   deploying2:
-    if: ${{ github.event_name == 'push' && !startsWith(github.event.head_commit.modified, 'service_registry/') }}
+    if: ${{ github.event_name == 'push' && !contains(github.event.workflow_run.workflow, 'Cloud-Gateway') }}
     uses: ./.github/workflows/common_job.yml
     with:
       JAR_FILE_NAME: 'cloud-gateway-0.0.1-SNAPSHOT.jar'
