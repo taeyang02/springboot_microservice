@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Product_API
 
 on:
   push:
@@ -14,8 +14,6 @@ env:
   EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
   EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
 
-extends:
-  - ./.github/workflows/branch-main/common_job.yml
 
 jobs:
   deploy:
