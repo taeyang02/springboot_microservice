@@ -2,55 +2,34 @@ name: Cloud Gateway
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
     paths: 
-     - 'cloud-gateway/**'
-
-env:
-  JAR_FILE_NAME: 'cloud-gateway-0.0.1-SNAPSHOT.jar'
-  TARGET_PATH: 'cloud-gateway'
-  EC2_HOST: ${{ secrets.EC2_HOST }}
-  EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-  EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+    - 'cloud-gateway/**'
+  workflow_run:
+    workflows:
+      - "Service Registry"
+    types:
+      - completed
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
+  deploying:
+    if: ${{ github.event_name == 'workflow_run' }}
+    uses: ./.github/workflows/common_job.yml
+    with:
+      JAR_FILE_NAME: 'cloud-gateway-0.0.1-SNAPSHOT.jar'
+      TARGET_PATH: 'cloud-gateway'
+    secrets:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}'
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    
-    - name: Set up JDK
-      uses: actions/setup-java@v2
-      with:
-        java-version: '17'
-        distribution: 'adopt'
-    
-    - name: Build JAR
-      run: cd ${{ env.TARGET_PATH }} && mvn package -DskipTests
-    
-    - name: Copy JAR to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ env.EC2_HOST }}
-        username: ${{ env.EC2_USERNAME }}
-        key: ${{ env.EC2_PRIVATE_KEY }}
-        source: '${{ env.TARGET_PATH }}/target/${{ env.JAR_FILE_NAME }}'
-        target: '${{ env.TARGET_PATH }}'
-        
-    - name: Deploying ... 
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ env.EC2_HOST }}
-        username: ${{ env.EC2_USERNAME }}
-        key: ${{ env.EC2_PRIVATE_KEY }}
-        script: |
-          {
-            if tmux ls | awk -F: '{print $1}' | grep -wq "deployment-${{ env.JAR_FILE_NAME }}"; then
-              tmux kill-session -t deployment-${{ env.JAR_FILE_NAME }}
-            fi
-          }
-          cd ${{ env.TARGET_PATH }}/${{ env.TARGET_PATH }}/target
-          tmux new-session -d -s deployment-${{ env.JAR_FILE_NAME }} 'java -jar ${{ env.JAR_FILE_NAME }}'
+  deploying2:
+    if: ${{ github.event_name == 'push' && github.event.workflow_run.head_commit.modified_files != 'service_registry/**'}}
+    uses: ./.github/workflows/common_job.yml
+    with:
+      JAR_FILE_NAME: 'cloud-gateway-0.0.1-SNAPSHOT.jar'
+      TARGET_PATH: 'cloud-gateway'
+    secrets:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+      EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}'
