@@ -15,11 +15,42 @@ env:
   EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
 
 jobs:
-  job1:
-    uses: ./.github/workflows/common_job.yml
-    with:
-      JAR_FILE_NAME: ${{ env.JAR_FILE_NAME }}
-      TARGET_PATH: ${{ env.TARGET_PATH }}
-      EC2_HOST: ${{ env.EC2_HOST }}
-      EC2_USERNAME: ${{ env.EC2_USERNAME }}
-      EC2_PRIVATE_KEY: ${{ env.EC2_PRIVATE_KEY }}
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'adopt'
+    
+    - name: Build JAR
+      run: cd ${{ env.TARGET_PATH }} && mvn package -DskipTests
+    
+    - name: Copy JAR to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ env.EC2_HOST }}
+        username: ${{ env.EC2_USERNAME }}
+        key: ${{ env.EC2_PRIVATE_KEY }}
+        source: '${{ env.TARGET_PATH }}/target/${{ env.JAR_FILE_NAME }}'
+        target: '${{ env.TARGET_PATH }}'
+        
+    - name: Deploying ... 
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.EC2_HOST }}
+        username: ${{ env.EC2_USERNAME }}
+        key: ${{ env.EC2_PRIVATE_KEY }}
+        script: |
+          {
+            if tmux ls | awk -F: '{print $1}' | grep -wq "deployment-${{ env.JAR_FILE_NAME }}"; then
+              tmux kill-session -t deployment-${{ env.JAR_FILE_NAME }}
+            fi
+          }
+          cd ${{ env.TARGET_PATH }}/${{ env.TARGET_PATH }}/target
+          tmux new-session -d -s deployment-${{ env.JAR_FILE_NAME }} 'java -jar ${{ env.JAR_FILE_NAME }}'
