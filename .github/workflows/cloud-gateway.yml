@@ -1,4 +1,4 @@
-name: Cloud Gateway
+name: Cloud-Gateway
 
 on:
   push:
